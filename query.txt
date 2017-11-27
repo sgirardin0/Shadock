@@ -1,0 +1,47 @@
+Remarque :
+
+    Etant donné que jMerise ne gére pas toutes les contraintes et évenements je tiens à préciser que quelques modifications on 
+    était apporté manuellement via phpmyadmin.  
+
+    Pour la table `caracteristique_val`, afin d'éviter d'avoir plusieurs fois le même attribut sur le même nid j'ai dû ajouter la contrainte :
+    ALTER TABLE `caracteristique_val` ADD CONSTRAINT UC_caracteristique UNIQUE (c_name,cv_value,n_id)
+   
+
+
+1) 
+    SELECT * FROM `nid`
+
+2) 
+    SELECT * FROM `nid` n WHERE (SELECT COUNT(s.s_id) FROM `shadock` s WHERE s.n_id = n.n_id) > 5
+
+3) 
+    // On récupére pour chaque nid le shadock qui est arrivé en dernier, donc celui qui a la date d'arrivée la plus récente.
+    SELECT s.s_id, s.s_name, s.s_date_nid, s.n_id FROM `shadock` s INNER JOIN `nid` n ON s.n_id = n.n_id GROUP BY n.n_id ORDER BY s.s_date_nid DESC
+
+4) 
+    // Si le nid comporte l'attribut 'forme' et que ca valeur est 'casserole' et si il comporte l'attribut 'couleur' et que ca valeur n'est pas égale à rouge alors on retourne le nid.
+    SELECT n.n_id, n.n_name, n.b_id FROM `nid` n 
+    INNER JOIN `caracteristique_val` cvforme ON cvforme.c_name = 'forme' AND cvforme.cv_value = 'casserole' AND n.n_id = cvforme.n_id
+    INNER JOIN `caracteristique_val` cvcouleur ON cvcouleur.c_name = 'couleur' AND cvcouleur.cv_value != 'rouge' AND n.n_id = cvcouleur.n_id
+    GROUP BY n.n_id
+
+5) 
+    // Liste des branches qui supportent d’autres branches :
+    SELECT * FROM `branche` b WHERE EXISTS (SELECT * FROM `branche_rel` brel WHERE brel.b_id = b.b_id)
+
+    // Liste des branches qui ne supportent pas de branche :
+    SELECT * FROM `branche` b WHERE !EXISTS (SELECT * FROM `branche_rel` brel WHERE brel.b_id = b.b_id)
+
+6)
+    // Si la clée étrangère `b_id` du nid est égale à la clée primaire de la branche et que la branche ce nomme 'GaBuZoMe' alors on retourne le nid.
+    SELECT n.n_id, n.n_name, n.b_id FROM `nid` n INNER JOIN `branche` b ON b.b_id = n.b_id AND b.b_name = 'GaBuZoMe'
+
+
+7) 
+    // Si le nombre de caracteristique possible (`caracteristique`) est égale au nombre de caracteristique existante (`caracteristique_val`) alors on retourne le nid.
+    SELECT * FROM `nid` n WHERE (SELECT COUNT(c.c_name) FROM `caracteristique` c) = (SELECT COUNT(cv.n_id) FROM `caracteristique_val` cv WHERE cv.n_id = n.n_id)
+    
+
+    
+    
+    
